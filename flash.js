@@ -2,13 +2,13 @@
 angular.module("info.vietnamcode.nampnq.videogular.plugins.flash", [])
     .directive(
         "vgFlashPlayer", ["VG_EVENTS", "VG_STATES", "$rootScope", "$window", '$timeout',
-            function(VG_EVENTS, VG_STATES, $rootScope, $window, $timeout) {
+            function (VG_EVENTS, VG_STATES, $rootScope, $window, $timeout) {
                 return {
                     restrict: "E",
                     require: "^videogular",
                     template: "<div id='videoPlayer_{{playerId}}' ></div>",
                     scope: {},
-                    link: function(scope, elem, attr, API) {
+                    link: function (scope, elem, attr, API) {
                         scope.playerId = Date.now();
                         var result = {}, formats = {
                             'video/flv': 'FLV',
@@ -17,16 +17,14 @@ angular.module("info.vietnamcode.nampnq.videogular.plugins.flash", [])
                             'video/m4v': 'MP4'
                         };
                         var videogularElementScope = scope.$parent.$$childHead;
-                        $window.onSWFReady = function(playerId) {
+                        $window.onSWFReady = function (playerId) {
                             if (playerId == "videoPlayer_" + scope.playerId) {
                                 console.log("Swf ready");
-                                console.log(arguments);
                             }
                         };
 
-                        $window.onSWFEvent = function(playerId, eventName) {
+                        $window.onSWFEvent = function (playerId, eventName) {
                             if (playerId == "videoPlayer_" + scope.playerId) {
-                                console.log(arguments);
                                 if (eventName == "waiting") {
                                     videogularElementScope.onStartBuffering({
                                         target: API.videoElement[0]
@@ -43,13 +41,26 @@ angular.module("info.vietnamcode.nampnq.videogular.plugins.flash", [])
                                     videogularElementScope.updateSize();
                                 }
                                 else if (eventName == "loadedmetadata") {
-                                    scope.$parent.$broadcast('loadedmetadata');
+                                    videogularElementScope.$broadcast('loadedmetadata');
                                 }
                             }
                         };
-                        $window.onSWFErrorEvent = function(playerId) {
+
+
+                        $window.onSWFErrorEvent = function (playerId) {
                             console.log(arguments);
                         };
+                        function HtmlCanPlay(type) {
+                            var returnVal = false;
+                            if (typeof API.videoElement[0].canPlayType === 'function') {
+                                returnVal = API.videoElement[0].canPlayType(type);
+                            }
+                            if (returnVal == "maybe" || returnVal == "probably") {
+                                return true;
+                            }
+
+                            return returnVal;
+                        }
 
                         function canPlay(type) {
                             return type in formats;
@@ -58,10 +69,10 @@ angular.module("info.vietnamcode.nampnq.videogular.plugins.flash", [])
                         function init() {
                             getSource();
                             if (result.method == "flash") {
-                                console.log("init");
+                                console.log("Flash init");
                                 createSWF();
                             } else {
-                                console.log("Your video source can't play with flash");
+                                console.log("Your video source will not play with flash,native html5 support of no flash installed");
                             }
 
                         }
@@ -69,45 +80,45 @@ angular.module("info.vietnamcode.nampnq.videogular.plugins.flash", [])
                         function setProperties() {
                             API.videoElement[0].vjs_setProperty("eventProxyFunction", "onSWFEvent");
                             API.videoElement[0].vjs_setProperty("errorEventProxyFunction", "onSWFErrorEvent");
-                            API.videoElement[0].__defineGetter__("currentTime", function() {
+                            API.videoElement[0].__defineGetter__("currentTime", function () {
                                 return API.videoElement[0].vjs_getProperty("currentTime");
                             });
-                            API.videoElement[0].__defineSetter__("currentTime", function(seconds) {
+                            API.videoElement[0].__defineSetter__("currentTime", function (seconds) {
                                 return API.videoElement[0].vjs_setProperty("currentTime", seconds);
                             });
-                            API.videoElement[0].__defineGetter__("duration", function() {
+                            API.videoElement[0].__defineGetter__("duration", function () {
                                 return API.videoElement[0].vjs_getProperty("duration");
                             });
-                            API.videoElement[0].__defineGetter__("paused", function() {
+                            API.videoElement[0].__defineGetter__("paused", function () {
                                 return API.videoElement[0].vjs_getProperty("paused");
                             });
-                            API.videoElement[0].__defineGetter__("videoWidth", function() {
+                            API.videoElement[0].__defineGetter__("videoWidth", function () {
                                 return API.videoElement[0].vjs_getProperty("videoWidth");
                             });
-                            API.videoElement[0].__defineGetter__("videoHeight", function() {
+                            API.videoElement[0].__defineGetter__("videoHeight", function () {
                                 return API.videoElement[0].vjs_getProperty("videoHeight");
                             });
-                            API.videoElement[0].__defineGetter__("volume", function() {
+                            API.videoElement[0].__defineGetter__("volume", function () {
                                 return API.videoElement[0].vjs_getProperty("volume");
                             });
-                            API.videoElement[0].__defineSetter__("volume", function(volume) {
+                            API.videoElement[0].__defineSetter__("volume", function (volume) {
                                 return API.videoElement[0].vjs_setProperty("volume", volume);
                             });
-                            API.videoElement[0].play = function() {
+                            API.videoElement[0].play = function () {
                                 API.videoElement[0].vjs_play();
                             }
-                            API.videoElement[0].pause = function() {
+                            API.videoElement[0].pause = function () {
                                 API.videoElement[0].vjs_pause();
                             };
 
-                            setInterval(function() {
+                            setInterval(function () {
                                 videogularElementScope.onUpdateTime({
                                     target: API.videoElement[0]
                                 })
                             }, 600);
                         }
 
-                        function setSource(e) {
+                        function setSource() {
                             API.videoElement[0].vjs_src(result.url);
 
                         }
@@ -116,7 +127,7 @@ angular.module("info.vietnamcode.nampnq.videogular.plugins.flash", [])
                         function waitForSWF() {
                             API.videoElement = elem.find("#videoPlayer_" + scope.playerId);
                             console.log("Waiting for the SWF to be loaded...");
-                            if (API.videoElement[0].hasOwnProperty("vjs_setProperty")) {
+                            if (typeof API.videoElement[0].vjs_setProperty === 'function') {
                                 setProperties();
                                 setSource();
                             } else {
@@ -171,9 +182,13 @@ angular.module("info.vietnamcode.nampnq.videogular.plugins.flash", [])
                                         });
                                     }
                                 }
-                            };
+                            }
+                            ;
                             for (i = 0; i < mediaFiles.length; i++) {
                                 // normal check
+                                if (HtmlCanPlay(mediaFiles[i].type)) {
+                                    break;
+                                }
                                 if (canPlay(mediaFiles[i].type)) {
                                     result.method = 'flash';
                                     result.url = mediaFiles[i].url;
@@ -181,6 +196,7 @@ angular.module("info.vietnamcode.nampnq.videogular.plugins.flash", [])
                                 }
                             }
                         }
+
                         $timeout(init);
 
                     }
