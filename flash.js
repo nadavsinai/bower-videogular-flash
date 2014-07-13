@@ -11,11 +11,11 @@ angular.module("info.vietnamcode.nampnq.videogular.plugins.flash", [])
                     link: function(scope, elem, attr, API) {
                         scope.playerId = Date.now();
                         var result = {}, formats = {
-                                'video/flv': 'FLV',
-                                'video/x-flv': 'FLV',
-                                'video/mp4': 'MP4',
-                                'video/m4v': 'MP4'
-                            };
+                            'video/flv': 'FLV',
+                            'video/x-flv': 'FLV',
+                            'video/mp4': 'MP4',
+                            'video/m4v': 'MP4'
+                        };
                         var videogularElementScope = scope.$parent.$$childHead;
                         $window.onSWFReady = function(playerId) {
                             if (playerId == "videoPlayer_" + scope.playerId) {
@@ -23,6 +23,7 @@ angular.module("info.vietnamcode.nampnq.videogular.plugins.flash", [])
                                 console.log(arguments);
                             }
                         };
+
                         $window.onSWFEvent = function(playerId, eventName) {
                             if (playerId == "videoPlayer_" + scope.playerId) {
                                 console.log(arguments);
@@ -40,6 +41,9 @@ angular.module("info.vietnamcode.nampnq.videogular.plugins.flash", [])
                                     })
                                 } else if (eventName == "play") {
                                     videogularElementScope.updateSize();
+                                }
+                                else if (eventName == "loadedmetadata") {
+                                    scope.$parent.$broadcast('loadedmetadata');
                                 }
                             }
                         };
@@ -126,8 +130,8 @@ angular.module("info.vietnamcode.nampnq.videogular.plugins.flash", [])
                                 eventProxyFunction: "onSWFEvent",
                                 errorEventProxyFunction: "onSWFErrorEvent",
                                 src: "",
-                                autoplay: false,
-                                preload: false
+                                autoplay: attr.autoplay || false,
+                                preload: attr.autoload || true
                             };
 
                             var params = {
